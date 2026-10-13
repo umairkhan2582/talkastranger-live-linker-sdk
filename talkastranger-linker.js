@@ -1,13 +1,14 @@
 /**
  * TalkAStranger Live Linker SDK
- * @version 1.0.0
+ * @version 1.1.0
  * @license MIT
  * 
  * Professional client-side SDK for TalkAStranger creators.
- * Cross-broadcast live streams, unlock Stripe monetization,
- * and tap into organic fan traffic via Country Live Lanes.
+ * Cross-broadcast live streams across TikTok, YouTube, Twitch, and Kick.
+ * Unlock direct Stripe monetization and organic fan discovery via Country Live Lanes.
  * 
  * Homepage: https://talkastranger.com
+ * Creator Studio: https://talkastranger.com/creator-studio
  * GitHub: https://github.com/umairkhan2582/talkastranger-live-linker-sdk
  */
 
@@ -15,13 +16,13 @@ const PUBLIC_ENDPOINT = "https://talkastranger.com";
 
 /**
  * TalkAStrangerLinker — connects your external streams to your
- * TalkAStranger Creator Dashboard profile.
+ * TalkAStranger Creator Studio profile.
  */
 class TalkAStrangerLinker {
   /**
    * @param {Object} options
    * @param {string} options.creatorUsername - Your TalkAStranger creator username
-   * @param {boolean} [options.autoBacklink=true] - Auto-append TalkAStranger backlink to descriptions
+   * @param {boolean} [options.autoBacklink=true] - Auto-append TalkAStranger support link to descriptions
    * @param {string} [options.endpoint] - Override the public API endpoint (defaults to https://talkastranger.com)
    */
   constructor(options) {
@@ -37,10 +38,10 @@ class TalkAStrangerLinker {
   /**
    * Link an external stream to your TalkAStranger creator profile.
    * @param {Object} config
-   * @param {string} config.platform - "youtube", "tiktok", "twitch", "kick"
+   * @param {string} config.platform - "tiktok", "youtube", "twitch", "kick"
    * @param {string} config.streamUrl - Full URL to your live stream
    * @param {string} config.title - Stream title
-   * @param {string} [config.description] - Stream description (backlink auto-appended if enabled)
+   * @param {string} [config.description] - Stream description (support link auto-appended if enabled)
    * @returns {Promise<Object>} Stream link result
    */
   async linkStream(config) {
@@ -48,12 +49,17 @@ class TalkAStrangerLinker {
       throw new Error("linkStream: platform and streamUrl are required");
     }
 
+    const validPlatforms = ["tiktok", "youtube", "twitch", "kick"];
+    if (!validPlatforms.includes(config.platform)) {
+      throw new Error(`linkStream: platform must be one of ${validPlatforms.join(", ")}`);
+    }
+
     const streamId = `stream_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    const backlink = this.getBacklinkText();
+    const supportLink = this.getSupportLinkText();
     const description = this.autoBacklink
       ? `${config.description || ""}
 
-${backlink}`.trim()
+${supportLink}`.trim()
       : config.description || "";
 
     const streamData = {
@@ -62,9 +68,10 @@ ${backlink}`.trim()
       streamUrl: config.streamUrl,
       title: config.title || "Live on TalkAStranger",
       description,
-      backlink,
+      supportLink,
       linkedAt: new Date().toISOString(),
       creatorProfile: `${this.endpoint}/${this.creatorUsername}`,
+      creatorStudio: `${this.endpoint}/creator-studio`,
     };
 
     this.linkedStreams.set(streamId, streamData);
@@ -81,10 +88,10 @@ ${backlink}`.trim()
   }
 
   /**
-   * Get the promotional backlink text for stream descriptions.
-   * @returns {string} Backlink text with your creator profile URL
+   * Get the promotional support text for stream descriptions.
+   * @returns {string} Support text with your creator profile URL
    */
-  getBacklinkText() {
+  getSupportLinkText() {
     return `Stream powered by TalkAStranger Live Lanes - Support this stream and send gifts directly via Stripe: ${this.endpoint}/${this.creatorUsername}`;
   }
 
@@ -97,6 +104,14 @@ ${backlink}`.trim()
   }
 
   /**
+   * Get your TalkAStranger Creator Studio URL.
+   * @returns {string} Full URL to the Creator Studio dashboard
+   */
+  getCreatorStudioUrl() {
+    return `${this.endpoint}/creator-studio`;
+  }
+
+  /**
    * Get all currently linked streams.
    * @returns {Array<Object>} Array of stream objects
    */
@@ -105,7 +120,7 @@ ${backlink}`.trim()
   }
 
   /**
-   * Generate SEO-optimized country lane links for your stream description.
+   * Generate country lane links for your stream description.
    * @param {number} [limit=10] - Max number of country links to include
    * @returns {string} Formatted country links block
    */
