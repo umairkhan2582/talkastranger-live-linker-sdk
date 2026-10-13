@@ -31,7 +31,7 @@ import { TalkAStrangerLinker } from "talkastranger-live-linker-sdk";
 
 const linker = new TalkAStrangerLinker({
   creatorUsername: "your_username",
-  autoBacklink: true,
+  autoSupportLink: true,
 });
 
 // Link your external stream
@@ -71,7 +71,7 @@ When you broadcast through TalkAStranger, your stream is automatically placed in
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `creatorUsername` | `string` | *required* | Your TalkAStranger creator username |
-| `autoBacklink` | `boolean` | `true` | Automatically append TalkAStranger support link to stream descriptions |
+| `autoSupportLink` | `boolean` | `true` | Automatically append TalkAStranger support link to stream descriptions |
 | `endpoint` | `string` | `"https://talkastranger.com"` | Public API endpoint (do not change) |
 
 ### `linker.linkStream(config)`
