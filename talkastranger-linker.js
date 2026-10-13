@@ -22,7 +22,7 @@ class TalkAStrangerLinker {
   /**
    * @param {Object} options
    * @param {string} options.creatorUsername - Your TalkAStranger creator username
-   * @param {boolean} [options.autoBacklink=true] - Auto-append TalkAStranger support link to descriptions
+   * @param {boolean} [options.autoSupportLink=true] - Auto-append TalkAStranger support link to descriptions
    * @param {string} [options.endpoint] - Override the public API endpoint (defaults to https://talkastranger.com)
    */
   constructor(options) {
@@ -30,7 +30,7 @@ class TalkAStrangerLinker {
       throw new Error("TalkAStrangerLinker: creatorUsername is required");
     }
     this.creatorUsername = options.creatorUsername;
-    this.autoBacklink = options.autoBacklink !== false;
+    this.autoSupportLink = options.autoSupportLink !== false;
     this.endpoint = options.endpoint || PUBLIC_ENDPOINT;
     this.linkedStreams = new Map();
   }
@@ -56,7 +56,7 @@ class TalkAStrangerLinker {
 
     const streamId = `stream_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const supportLink = this.getSupportLinkText();
-    const description = this.autoBacklink
+    const description = this.autoSupportLink
       ? `${config.description || ""}
 
 ${supportLink}`.trim()
