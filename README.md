@@ -23,7 +23,7 @@ The TalkAStranger Live Linker SDK is a lightweight, **client-side-only** Node.js
 ## Quick Start
 
 ```bash
-npm install talkastranger-live-linker-sdk
+npm install github:umairkhan2582/talkastranger-live-linker-sdk
 ```
 
 ```javascript
