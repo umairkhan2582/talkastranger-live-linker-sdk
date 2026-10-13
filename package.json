@@ -1,0 +1,27 @@
+{
+  "name": "talkastranger-live-linker-sdk",
+  "version": "1.0.0",
+  "description": "Professional open-source SDK for TalkAStranger creators \u2014 cross-broadcast TikTok to YouTube, unlock direct Stripe monetized gifting, and tap into organic fan traffic via Country Live Lanes.",
+  "main": "talkastranger-linker.js",
+  "types": "index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/umairkhan2582/talkastranger-live-linker-sdk.git"
+  },
+  "keywords": [
+    "streaming",
+    "tiktok-live",
+    "youtube-streaming",
+    "cross-broadcasting",
+    "creator-tools",
+    "stripe-connect",
+    "talkastranger",
+    "video-chat"
+  ],
+  "author": "TalkAStranger Team <support@talkastranger.com> (https://talkastranger.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/umairkhan2582/talkastranger-live-linker-sdk/issues"
+  },
+  "homepage": "https://talkastranger.com/developers"
+}
