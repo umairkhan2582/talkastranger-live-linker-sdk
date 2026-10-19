@@ -1,11 +1,11 @@
 # TalkAStranger Live Linker SDK
 
-[![npm version](https://img.shields.io/badge/npm-1.0.0-blue.svg)](https://www.npmjs.com/)
+[![npm version](https://img.shields.io/badge/npm-1.2.0-blue.svg)](https://www.npmjs.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
 
-> Professional open-source connection bridge for **[TalkAStranger.com](https://talkastranger.com)** creators to cross-broadcast live matching rooms and unlock direct Stripe monetized gifting loops instantly.
+> Professional open-source connection bridge for **[TalkAStranger.com](https://talkastranger.com)** creators to cross-broadcast live matching rooms and unlock direct Stripe monetized gifting loops instantly across **Kick**, **Twitch**, **TikTok**, and **YouTube**.
 
 ---
 
@@ -13,6 +13,8 @@
 
 The TalkAStranger Live Linker SDK is a lightweight, **client-side-only** Node.js library that connects your TalkAStranger Creator Studio with external streaming platforms. It enables:
 
+- **Kick.com Live Streaming** — Link your Kick stream directly into TalkAStranger Country Live Lanes with strict channel validation and normalized metadata.
+- **Twitch Stream Linking** — Connect your Twitch channel with automated channel regex parsing, case normalization, and deep audience integration.
 - **TikTok Live Streaming** — Stream your TikTok live sessions directly into TalkAStranger Country Live Lanes and reach viewers across 107+ countries.
 - **YouTube Cross-Broadcasting** — Pipe your live match rooms directly into your YouTube Live audience with a single integration call.
 - **Direct Stripe Monetization** — Bypass heavy app-store taxes and streaming platform cuts. Viewers click your pinned stream link to send Sparks and visual Gifts directly via our verified Stripe Connect setup.
@@ -27,40 +29,59 @@ npm install github:umairkhan2582/talkastranger-live-linker-sdk
 ```
 
 ```javascript
-import { TalkAStrangerLinker } from "talkastranger-live-linker-sdk";
+import { TalkAStrangerLinker, parseStreamUrl } from "talkastranger-live-linker-sdk";
 
 const linker = new TalkAStrangerLinker({
   creatorUsername: "your_username",
   autoSupportLink: true,
 });
 
-// Link your external stream
+// 1. Link a Kick.com stream
 await linker.linkStream({
-  platform: "tiktok", // or "youtube", "twitch", "kick"
-  streamUrl: "https://www.tiktok.com/@your_username/live",
-  title: "Live Now: Random Video Chat Reactions!",
+  platform: "kick",
+  streamUrl: "https://kick.com/your_channel",
+  title: "Live on Kick: Random Video Chat Reactions!",
 });
 
-// The SDK automatically appends a support link to your stream descriptions:
-// "Stream powered by TalkAStranger Live Lanes - Support this stream and send gifts
-//  directly via Stripe: https://talkastranger.com/your_username"
+// 2. Link a Twitch stream
+await linker.linkStream({
+  platform: "twitch",
+  streamUrl: "https://www.twitch.tv/your_channel",
+  title: "Streaming live reactions with fans worldwide",
+});
+
+// 3. Link TikTok or YouTube
+await linker.linkStream({
+  platform: "tiktok",
+  streamUrl: "https://www.tiktok.com/@your_username/live",
+});
 ```
 
 ---
 
-## Features
+## Platform Adapters
 
-### TikTok Live Streaming
-Stream your TikTok live sessions into TalkAStranger Country Live Lanes. The Linker SDK handles metadata synchronization, stream health monitoring, and viewer discovery — all from a single function call.
+### Kick.com Adapter
+- **Supported URL Formats:**
+  - `https://kick.com/channel`
+  - `https://www.kick.com/channel`
+  - Protocol-relative `//kick.com/channel`
+  - Trailing slashes, query parameters, and fragments
+- **Security & Validation:**
+  - Strict hostname validation (strictly `kick.com` or `www.kick.com`, rejecting lookalikes such as `kick.com.fake.com` or `notkick.com`).
+  - Channel regex parser matching `^[a-zA-Z0-9_-]{1,50}$`.
+  - Rejection of reserved platform routes (`/categories`, `/following`, `/leaderboard`, `/video`, etc.).
 
-### YouTube Cross-Broadcasting
-Take your live match reactions and pipe them directly into your YouTube Live audience. The SDK manages the connection so your YouTube subscribers can discover your TalkAStranger content.
-
-### Direct Stripe Monetization
-No app-store cuts. No platform fees. When viewers discover your stream through TalkAStranger Country Live Lanes, they can send you **Sparks** and **visual Gifts** powered by our verified Stripe Connect infrastructure. You keep what you earn.
-
-### Organic Fan Discovery via Country Live Lanes
-When you broadcast through TalkAStranger, your stream is automatically placed into one of our **[107+ Country Live Lanes](https://talkastranger.com/countries)**. This means viewers from the United States, United Kingdom, Pakistan, India, Brazil, and 100+ other countries can discover your stream organically — no paid promotion needed.
+### Twitch Adapter
+- **Supported URL Formats:**
+  - `https://twitch.tv/channel`
+  - `https://www.twitch.tv/channel`
+  - `https://m.twitch.tv/channel`
+- **Security & Validation:**
+  - Strict hostname validation (strictly `twitch.tv`, `www.twitch.tv`, or `m.twitch.tv`).
+  - Channel regex validation matching Twitch specification (`^[a-zA-Z0-9_]{3,25}$`).
+  - Automatic case normalization (lowercasing channel identifiers).
+  - Rejection of reserved paths (`/directory`, `/videos`, `/moderator`, `/settings`, etc.).
 
 ---
 
@@ -72,57 +93,28 @@ When you broadcast through TalkAStranger, your stream is automatically placed in
 |---|---|---|---|
 | `creatorUsername` | `string` | *required* | Your TalkAStranger creator username |
 | `autoSupportLink` | `boolean` | `true` | Automatically append TalkAStranger support link to stream descriptions |
-| `endpoint` | `string` | `"https://talkastranger.com"` | Public API endpoint (do not change) |
+| `endpoint` | `string` | `"https://talkastranger.com"` | Public API endpoint (defaults to https://talkastranger.com) |
 
 ### `linker.linkStream(config)`
 Connects your external stream to your TalkAStranger creator profile.
+- **Supported platforms:** `kick`, `twitch`, `tiktok`, `youtube`
+- **Returns:** Promise resolving to `LinkedStreamData` containing `id`, `platform`, `channelId`, `streamUrl`, `supportLink`, and `metadata`.
 
-**Supported platforms:** `tiktok`, `youtube`, `twitch`, `kick`
-
-### `linker.unlinkStream(streamId)`
-Removes a linked stream from your profile.
-
-### `linker.getSupportLinkText()`
-Returns the promotional support text for your stream description.
+### `parseStreamUrl(urlString, preferredPlatform?)`
+Utility function to parse any supported stream URL, validate hostnames, and return normalized metadata.
 
 ---
 
-## Security
+## Testing
 
-This SDK is **100% client-side**. It communicates with TalkAStranger servers only through our sanitized, rate-limited public endpoint at `https://talkastranger.com`. No private server paths, database connections, API tokens, or internal workflows are exposed.
+Run the isolated test suite using Node.js native test runner:
 
----
-
-## Country Channels
-
-TalkAStranger supports live streaming across 107+ countries. Explore the channels:
-
-- **[Random video chat with strangers in United States](https://talkastranger.com/countries/us)**
-- **[Talk to strangers online in United Kingdom](https://talkastranger.com/countries/gb)**
-- **[Live video chat in Pakistan](https://talkastranger.com/countries/pk)**
-- **[Free random chat in India](https://talkastranger.com/countries/in)**
-- **[Video call strangers in Brazil](https://talkastranger.com/countries/br)**
-- **[Talk to strangers in Canada](https://talkastranger.com/countries/ca)**
-- **[Random chat in Australia](https://talkastranger.com/countries/au)**
-- **[Live stream in Germany](https://talkastranger.com/countries/de)**
-
-[View all 107+ countries](https://talkastranger.com/countries)
+```bash
+npm test
+```
 
 ---
 
 ## License
 
 MIT — Free to use, modify, and distribute. See [LICENSE](LICENSE) for details.
-
----
-
-## Links
-
-- **[TalkAStranger.com](https://talkastranger.com)** — Main platform
-- **[Creator Studio](https://talkastranger.com/creator-studio)** — Manage your streams and earnings
-- **[Pricing & Premium](https://talkastranger.com/pricing)** — Upgrade your account
-- **[Stream Overlays](https://github.com/umairkhan2582/talkastranger-stream-overlays)** — OBS/Streamlabs overlay widgets
-
----
-
-Made with care for creators worldwide. [Start streaming today](https://talkastranger.com).
