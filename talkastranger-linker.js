@@ -1,6 +1,6 @@
 /**
  * TalkAStranger Live Linker SDK
- * @version 1.1.0
+ * @version 1.2.0
  * @license MIT
  * 
  * Professional client-side SDK for TalkAStranger creators.
@@ -11,6 +11,15 @@
  * Creator Studio: https://talkastranger.com/creator-studio
  * GitHub: https://github.com/umairkhan2582/talkastranger-live-linker-sdk
  */
+
+const {
+  AdapterRegistry,
+  defaultRegistry,
+  KickAdapter,
+  TwitchAdapter,
+  YouTubeAdapter,
+  TikTokAdapter,
+} = require("./adapters/registry");
 
 const PUBLIC_ENDPOINT = "https://talkastranger.com";
 
@@ -24,6 +33,7 @@ class TalkAStrangerLinker {
    * @param {string} options.creatorUsername - Your TalkAStranger creator username
    * @param {boolean} [options.autoSupportLink=true] - Auto-append TalkAStranger support link to descriptions
    * @param {string} [options.endpoint] - Override the public API endpoint (defaults to https://talkastranger.com)
+   * @param {AdapterRegistry} [options.registry] - Custom adapter registry
    */
   constructor(options) {
     if (!options || !options.creatorUsername) {
@@ -32,6 +42,7 @@ class TalkAStrangerLinker {
     this.creatorUsername = options.creatorUsername;
     this.autoSupportLink = options.autoSupportLink !== false;
     this.endpoint = options.endpoint || PUBLIC_ENDPOINT;
+    this.registry = options.registry || defaultRegistry;
     this.linkedStreams = new Map();
   }
 
@@ -40,7 +51,7 @@ class TalkAStrangerLinker {
    * @param {Object} config
    * @param {string} config.platform - "tiktok", "youtube", "twitch", "kick"
    * @param {string} config.streamUrl - Full URL to your live stream
-   * @param {string} config.title - Stream title
+   * @param {string} [config.title] - Stream title
    * @param {string} [config.description] - Stream description (support link auto-appended if enabled)
    * @returns {Promise<Object>} Stream link result
    */
@@ -49,29 +60,33 @@ class TalkAStrangerLinker {
       throw new Error("linkStream: platform and streamUrl are required");
     }
 
-    const validPlatforms = ["tiktok", "youtube", "twitch", "kick"];
-    if (!validPlatforms.includes(config.platform)) {
+    const platform = config.platform.toLowerCase();
+    const validPlatforms = this.registry.getSupportedPlatforms();
+    if (!validPlatforms.includes(platform)) {
       throw new Error(`linkStream: platform must be one of ${validPlatforms.join(", ")}`);
     }
+
+    // Parse and validate via platform adapter
+    const parsed = this.registry.parseStreamUrl(config.streamUrl, platform);
 
     const streamId = `stream_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const supportLink = this.getSupportLinkText();
     const description = this.autoSupportLink
-      ? `${config.description || ""}
-
-${supportLink}`.trim()
+      ? `${config.description || ""}\n\n${supportLink}`.trim()
       : config.description || "";
 
     const streamData = {
       id: streamId,
-      platform: config.platform,
-      streamUrl: config.streamUrl,
+      platform,
+      channelId: parsed.channelId,
+      streamUrl: parsed.normalizedUrl || config.streamUrl,
       title: config.title || "Live on TalkAStranger",
       description,
       supportLink,
       linkedAt: new Date().toISOString(),
       creatorProfile: `${this.endpoint}/${this.creatorUsername}`,
       creatorStudio: `${this.endpoint}/creator-studio`,
+      metadata: parsed.metadata || {},
     };
 
     this.linkedStreams.set(streamId, streamData);
@@ -144,17 +159,34 @@ ${supportLink}`.trim()
         (c) =>
           `- [Live video chat in ${c.name}](${this.endpoint}/countries/${c.code})`
       )
-      .join("
-");
+      .join("\n");
   }
 }
 
-// CommonJS export
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = { TalkAStrangerLinker };
+function parseStreamUrl(urlString, preferredPlatform) {
+  return defaultRegistry.parseStreamUrl(urlString, preferredPlatform);
 }
 
-// ES module export
-if (typeof exports !== "undefined") {
-  exports.TalkAStrangerLinker = TalkAStrangerLinker;
+function getAdapter(platformName) {
+  return defaultRegistry.get(platformName);
 }
+
+function registerAdapter(platformName, adapter) {
+  return defaultRegistry.register(platformName, adapter);
+}
+
+const SUPPORTED_PLATFORMS = defaultRegistry.getSupportedPlatforms();
+
+module.exports = {
+  TalkAStrangerLinker,
+  KickAdapter,
+  TwitchAdapter,
+  YouTubeAdapter,
+  TikTokAdapter,
+  AdapterRegistry,
+  defaultRegistry,
+  parseStreamUrl,
+  getAdapter,
+  registerAdapter,
+  SUPPORTED_PLATFORMS,
+};
