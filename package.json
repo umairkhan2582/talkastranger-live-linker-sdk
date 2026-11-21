@@ -1,7 +1,7 @@
 {
   "name": "talkastranger-live-linker-sdk",
-  "version": "1.2.0",
-  "description": "Professional open-source SDK for TalkAStranger creators — cross-broadcast TikTok, YouTube, Twitch, and Kick live streams, unlock direct Stripe monetized gifting, and tap into organic fan traffic via Country Live Lanes.",
+  "version": "1.3.0",
+  "description": "Open-source WebRTC broadcast client engine and live stream bridge for TalkAStranger creators and real-time streaming applications.",
   "main": "talkastranger-linker.js",
   "types": "index.d.ts",
   "scripts": {

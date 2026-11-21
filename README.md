@@ -1,113 +1,108 @@
 # TalkAStranger Live Linker SDK
 
-[![npm version](https://img.shields.io/badge/npm-1.2.0-blue.svg)](https://www.npmjs.com/)
+[![npm version](https://img.shields.io/badge/npm-1.3.0-blue.svg)](https://www.npmjs.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
 
-> Professional open-source connection bridge for **[TalkAStranger.com](https://talkastranger.com)** creators to cross-broadcast live matching rooms and unlock direct Stripe monetized gifting loops instantly across **Kick**, **Twitch**, **TikTok**, and **YouTube**.
+> Open-source WebRTC broadcast client engine and live stream bridge for real-time video chat creators and multi-platform streaming.
 
 ---
 
-## What is TalkAStranger Live Linker?
+## Overview
 
-The TalkAStranger Live Linker SDK is a lightweight, **client-side-only** Node.js library that connects your TalkAStranger Creator Studio with external streaming platforms. It enables:
-
-- **Kick.com Live Streaming** — Link your Kick stream directly into TalkAStranger Country Live Lanes with strict channel validation and normalized metadata.
-- **Twitch Stream Linking** — Connect your Twitch channel with automated channel regex parsing, case normalization, and deep audience integration.
-- **TikTok Live Streaming** — Stream your TikTok live sessions directly into TalkAStranger Country Live Lanes and reach viewers across 107+ countries.
-- **YouTube Cross-Broadcasting** — Pipe your live match rooms directly into your YouTube Live audience with a single integration call.
-- **Direct Stripe Monetization** — Bypass heavy app-store taxes and streaming platform cuts. Viewers click your pinned stream link to send Sparks and visual Gifts directly via our verified Stripe Connect setup.
-- **Organic Fan Discovery** — Broadcasting into TalkAStranger places your live stream inside our public Country Live Lanes, introducing you to an entirely new pool of global fans across **[107+ country channels](https://talkastranger.com/countries)**.
+The **TalkAStranger Live Linker SDK** provides developers with two core capabilities:
+1. **WebRTC Broadcast Engine (`WebRTCBroadcaster`)**: Complete client-side management of `RTCPeerConnection`, local media streams (`getUserMedia` / screen capture), SDP offer/answer negotiation, data channels, and real-time stream telemetry metrics.
+2. **Platform Stream Adapters (`TalkAStrangerLinker`)**: Validates, normalizes, and connects live stream endpoints across **Kick**, **Twitch**, **YouTube Live**, and **TikTok**.
 
 ---
 
-## Quick Start
+## Features
+
+- **Full WebRTC Lifecycle Management**: Built-in STUN/TURN handling, ICE candidate gathering, and connection state management.
+- **Media Stream Handling**: Attach camera, mic, or screen display streams with instant track-level mute/unmute control.
+- **Real-Time Data Channel**: Low-latency event and metadata communication between connected peers.
+- **Stream Metrics Inspector**: Inspect outbound bitrate, packet counts, frames-per-second, and round-trip time (RTT) via `getMetrics()`.
+- **Universal Multi-Platform Linking**: Parse, normalize, and validate live streams from Twitch, Kick, YouTube, and TikTok.
+
+---
+
+## Installation
 
 ```bash
-npm install github:umairkhan2582/talkastranger-live-linker-sdk
+npm install talkastranger-live-linker-sdk
 ```
+
+---
+
+## Quick Start: WebRTC Broadcast Engine
 
 ```javascript
-import { TalkAStrangerLinker, parseStreamUrl } from "talkastranger-live-linker-sdk";
+const { WebRTCBroadcaster } = require("talkastranger-live-linker-sdk");
 
-const linker = new TalkAStrangerLinker({
-  creatorUsername: "your_username",
-  autoSupportLink: true,
+// Initialize broadcaster with STUN/TURN servers
+const broadcaster = new WebRTCBroadcaster();
+const pc = broadcaster.init();
+
+// Listen to ICE candidates to exchange via your signaling channel
+broadcaster.on("ice-candidate", (candidate) => {
+  signaling.send({ type: "candidate", candidate });
 });
 
-// 1. Link a Kick.com stream
-await linker.linkStream({
-  platform: "kick",
-  streamUrl: "https://kick.com/your_channel",
-  title: "Live on Kick: Random Video Chat Reactions!",
-});
+// Capture local media and attach to peer connection
+navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+  .then((stream) => {
+    broadcaster.setLocalStream(stream);
+  });
 
-// 2. Link a Twitch stream
-await linker.linkStream({
-  platform: "twitch",
-  streamUrl: "https://www.twitch.tv/your_channel",
-  title: "Streaming live reactions with fans worldwide",
-});
+// Create SDP Offer for peer negotiation
+async function startBroadcast() {
+  const offer = await broadcaster.createOffer();
+  signaling.send({ type: "offer", sdp: offer.sdp });
+}
 
-// 3. Link TikTok or YouTube
-await linker.linkStream({
-  platform: "tiktok",
-  streamUrl: "https://www.tiktok.com/@your_username/live",
-});
+// Receive SDP Answer from remote peer / signaling server
+async function onSignalingMessage(msg) {
+  if (msg.type === "answer") {
+    await broadcaster.handleAnswer(msg);
+  } else if (msg.type === "candidate") {
+    await broadcaster.addIceCandidate(msg.candidate);
+  }
+}
+
+// Inspect real-time stream quality
+setInterval(async () => {
+  const metrics = await broadcaster.getMetrics();
+  console.log("FPS:", metrics.video?.framesPerSecond, "RTT:", metrics.candidatePair?.currentRoundTripTime);
+}, 2000);
 ```
 
 ---
 
-## Platform Adapters
+## Multi-Platform Stream Linking
 
-### Kick.com Adapter
-- **Supported URL Formats:**
-  - `https://kick.com/channel`
-  - `https://www.kick.com/channel`
-  - Protocol-relative `//kick.com/channel`
-  - Trailing slashes, query parameters, and fragments
-- **Security & Validation:**
-  - Strict hostname validation (strictly `kick.com` or `www.kick.com`, rejecting lookalikes such as `kick.com.fake.com` or `notkick.com`).
-  - Channel regex parser matching `^[a-zA-Z0-9_-]{1,50}$`.
-  - Rejection of reserved platform routes (`/categories`, `/following`, `/leaderboard`, `/video`, etc.).
+```javascript
+const { TalkAStrangerLinker } = require("talkastranger-live-linker-sdk");
 
-### Twitch Adapter
-- **Supported URL Formats:**
-  - `https://twitch.tv/channel`
-  - `https://www.twitch.tv/channel`
-  - `https://m.twitch.tv/channel`
-- **Security & Validation:**
-  - Strict hostname validation (strictly `twitch.tv`, `www.twitch.tv`, or `m.twitch.tv`).
-  - Channel regex validation matching Twitch specification (`^[a-zA-Z0-9_]{3,25}$`).
-  - Automatic case normalization (lowercasing channel identifiers).
-  - Rejection of reserved paths (`/directory`, `/videos`, `/moderator`, `/settings`, etc.).
+const linker = new TalkAStrangerLinker({
+  creatorUsername: "streamer_pro"
+});
+
+// Link external Twitch or Kick stream
+const stream = await linker.linkStream({
+  platform: "twitch",
+  streamUrl: "https://twitch.tv/shroud",
+  title: "Championship Live Match"
+});
+
+console.log("Linked stream ID:", stream.id);
+```
 
 ---
 
-## API Reference
+## Running Tests
 
-### `new TalkAStrangerLinker(options)`
-
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `creatorUsername` | `string` | *required* | Your TalkAStranger creator username |
-| `autoSupportLink` | `boolean` | `true` | Automatically append TalkAStranger support link to stream descriptions |
-| `endpoint` | `string` | `"https://talkastranger.com"` | Public API endpoint (defaults to https://talkastranger.com) |
-
-### `linker.linkStream(config)`
-Connects your external stream to your TalkAStranger creator profile.
-- **Supported platforms:** `kick`, `twitch`, `tiktok`, `youtube`
-- **Returns:** Promise resolving to `LinkedStreamData` containing `id`, `platform`, `channelId`, `streamUrl`, `supportLink`, and `metadata`.
-
-### `parseStreamUrl(urlString, preferredPlatform?)`
-Utility function to parse any supported stream URL, validate hostnames, and return normalized metadata.
-
----
-
-## Testing
-
-Run the isolated test suite using Node.js native test runner:
+The SDK has comprehensive unit tests covering WebRTC negotiation, stream metrics, and platform adapters:
 
 ```bash
 npm test
@@ -117,4 +112,4 @@ npm test
 
 ## License
 
-MIT — Free to use, modify, and distribute. See [LICENSE](LICENSE) for details.
+MIT © [TalkAStranger](https://talkastranger.com)

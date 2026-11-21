@@ -1,3 +1,7 @@
+const { ScreenCapture, PRESETS } = require("./lib/capture");
+const { AlertAudioSynthesizer } = require("./lib/alerts");
+const { LiveBroadcasterHub } = require("./lib/broadcaster-hub");
+const { WebRTCBroadcaster, DEFAULT_ICE_SERVERS } = require("./lib/webrtc-broadcaster");
 /**
  * TalkAStranger Live Linker SDK
  * @version 1.2.0
@@ -178,6 +182,12 @@ function registerAdapter(platformName, adapter) {
 const SUPPORTED_PLATFORMS = defaultRegistry.getSupportedPlatforms();
 
 module.exports = {
+  WebRTCBroadcaster,
+  LiveBroadcasterHub,
+  ScreenCapture,
+  AlertAudioSynthesizer,
+  PRESETS,
+  DEFAULT_ICE_SERVERS,
   TalkAStrangerLinker,
   KickAdapter,
   TwitchAdapter,
