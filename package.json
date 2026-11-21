@@ -1,23 +1,25 @@
 {
   "name": "talkastranger-live-linker-sdk",
-  "version": "1.3.0",
-  "description": "Open-source WebRTC broadcast client engine and live stream bridge for TalkAStranger creators and real-time streaming applications.",
+  "version": "1.4.0",
+  "description": "Open-source WebRTC broadcast engine, multi-platform OmniStream bridge (Twitch, YouTube, TikTok, Kick), audience co-host seats, and Stripe Connect monetization for TalkAStranger creators.",
   "main": "talkastranger-linker.js",
   "types": "index.d.ts",
   "scripts": {
     "test": "node --test test/*.test.js"
   },
   "keywords": [
-    "talkastranger",
-    "streaming",
-    "kick",
-    "twitch",
-    "tiktok",
-    "youtube",
-    "live-streaming",
     "webrtc",
-    "monetization",
-    "stripe"
+    "broadcasting",
+    "live-streaming",
+    "omnistream",
+    "co-hosting",
+    "multistream",
+    "tiktok-live",
+    "twitch-live",
+    "youtube-live",
+    "stripe-connect",
+    "obs-studio",
+    "talkastranger"
   ],
   "author": "TalkAStranger Engineering",
   "license": "MIT",
