@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { EventEmitter } = require("node:events");
-const { WebRTCBroadcaster, DEFAULT_ICE_SERVERS } = require("/tmp/webrtc-broadcaster");
+const { WebRTCBroadcaster, DEFAULT_ICE_SERVERS } = require("../lib/webrtc-broadcaster");
 
 // Mock RTCPeerConnection for Node.js testing
 class MockRTCPeerConnection extends EventEmitter {
